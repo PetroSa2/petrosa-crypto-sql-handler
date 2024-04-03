@@ -27,4 +27,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: yurisa2/petrosa-crypto-sql-handler:v0.0.36
+          tags: yurisa2/petrosa-crypto-sql-handler:v0.0.37

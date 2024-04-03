@@ -62,7 +62,7 @@ class PETROSAWriter(object):
 
                 if "T" in msg:
                     candle["close_time"] = datetime.fromtimestamp(msg["T"] / 1000.0)
-                candle["insert_time"] = datetime.now(timezone.UTC)
+                candle["insert_time"] = datetime.utcnow()
                 if "n" in msg:
                     candle["qty"] = float(msg["n"])
                 if "q" in msg:
@@ -178,7 +178,7 @@ class PETROSAWriter(object):
         else:
             record_prep["origin"] = "noorigin"
         record_prep["timestamp"] = int(time.time() * 1000)
-        record_prep["insert_time"] = datetime.now(timezone.UTC)
+        record_prep["insert_time"] = datetime.utcnow()
 
         return record_prep
 
