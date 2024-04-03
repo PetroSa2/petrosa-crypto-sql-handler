@@ -17,6 +17,8 @@ MAX_WORKERS = int(os.getenv("MAX_WORKERS", "1"))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "100"))
 BATCH_TIME = int(os.getenv("BATCH_TIME", "5"))
 
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
 os.environ["MYSQL_USER"] = os.getenv("MYSQL_CRYPTO_USER", "")
 os.environ["MYSQL_PASSWORD"] = os.getenv("MYSQL_CRYPTO_PASSWORD", "")
 os.environ["MYSQL_SERVER"] = os.getenv("MYSQL_CRYPTO_SERVER", "")

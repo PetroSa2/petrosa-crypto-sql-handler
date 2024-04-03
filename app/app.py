@@ -6,7 +6,7 @@ from typing import Iterable
 from opentelemetry.metrics import CallbackOptions, Observation
 
 from app import receiver
-from app.variables import OTEL_SERVICE_NAME, METER
+from app.variables import OTEL_SERVICE_NAME, METER, LOG_LEVEL
 
 def send_number_of_threads(options: CallbackOptions) -> Iterable[Observation]:
     yield Observation(threading.active_count())
@@ -18,7 +18,7 @@ METER.create_observable_gauge(
     description="Number of Threads",
 )
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=LOG_LEVEL)
 
 receiver_socket = receiver.PETROSAReceiver(
     "binance_klines_current",

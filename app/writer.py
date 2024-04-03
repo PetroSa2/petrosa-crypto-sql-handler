@@ -156,7 +156,7 @@ class PETROSAWriter(object):
                     last_h1 = time.time()
             except Exception as e:
                 logging.error("Error on update_forever", e)
-                logging.info(msg_table)
+                logging.warning(msg_table)
                 self.queue.put(msg_table)
                 
             time.sleep(0.01)
@@ -187,7 +187,7 @@ class PETROSAWriter(object):
     @TRACER.start_as_current_span(name=SVC + ".wrt.update_sql")
     @retry.retry(tries=5, backoff=2, logger=logging.getLogger(__name__))
     def update_sql(self, candle_list, table, ):
-        logging.info(f"Inserting {len(candle_list)} records on {table}")
+        logging.debug(f"Inserting {len(candle_list)} records on {table}")
         start_time = time.time_ns() // 1_000_000
 
         sql.update_sql(record_list=candle_list, table=table, mode="INSERT IGNORE")
