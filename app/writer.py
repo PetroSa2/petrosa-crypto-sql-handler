@@ -187,7 +187,7 @@ class PETROSAWriter(object):
     @TRACER.start_as_current_span(name=SVC + ".wrt.update_sql")
     @retry.retry(tries=5, backoff=2, logger=logging.getLogger(__name__))
     def update_sql(self, candle_list, table, ):
-        logging.debug(f"Inserting {len(candle_list)} records on {table}")
+        logging.debug(f"DB Inserting {len(candle_list)} records on {table}")
         start_time = time.time_ns() // 1_000_000
 
         sql.update_sql(record_list=candle_list, table=table, mode="INSERT IGNORE")
