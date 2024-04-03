@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petrosa-crypto-sql-handler
+  namespace: petrosa-apps
+  labels:
+    app: petrosa-crypto-sql-handler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petrosa-crypto-sql-handler
+  template:
+    metadata:
+      labels:
+        app: petrosa-crypto-sql-handler
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: petrosa.class
+                operator: In
+                values:
+                - worker
+      containers:
+      - name: petrosa-crypto-sql-handler
+        image: yurisa2/petrosa-crypto-sql-handler:v0.0.34
+        imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: petrosa-apps-configmap
+        env:
+          - name: OTEL_SERVICE_NAME
+            value: "petrosa-crypto-sql-handler"
+          - name: VERSION
+            value: "0.0.34"
+      restartPolicy: Always
