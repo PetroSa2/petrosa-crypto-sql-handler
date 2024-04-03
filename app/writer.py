@@ -1,5 +1,4 @@
 import logging
-import os
 import queue
 import threading
 import time
@@ -7,25 +6,21 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Iterable
 import retry
+from petrosa.database import sql
 
-import mysql.connector
 from opentelemetry.metrics import CallbackOptions, Observation
 from app.variables import (
     TRACER,
-    OTEL_SERVICE_NAME,
+    SVC,
     METER,
     MAX_WORKERS,
     BATCH_SIZE,
-    BATCH_TIME,
-    MYSQL_CRYPTO_USER,
-    MYSQL_CRYPTO_PASSWORD,
-    MYSQL_CRYPTO_SERVER,
-    MYSQL_CRYPTO_DB
+    BATCH_TIME
 )
 
 
 class PETROSAWriter(object):
-    @TRACER.start_as_current_span(name="init_writer")
+    @TRACER.start_as_current_span(name=SVC + ".wrt.init_writer")
     def __init__(self):
         self.queue = queue.Queue()
         self.executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
@@ -38,37 +33,20 @@ class PETROSAWriter(object):
         self.candles_h1_list = []
 
         METER.create_observable_gauge(
-            OTEL_SERVICE_NAME + ".write.sql.update.single",
+            SVC + ".write.sql.update.single",
             callbacks=[self.send_sql_update_obs],
             description="Time updating sql single doc",
         )
 
         METER.create_observable_gauge(
-            OTEL_SERVICE_NAME + ".write.gauge.queue.size",
+            SVC + ".write.gauge.queue.size",
             callbacks=[self.send_queue_size],
             description="Size of the queue for writing",
         )
 
-        self.cnx = None
-        self.cursor = None
-
         threading.Thread(target=self.update_forever).start()
 
-    @TRACER.start_as_current_span(name="connect_mysql")
-    def connect_mysql(self):
-        self.cnx = mysql.connector.connect(
-            user=MYSQL_CRYPTO_USER,
-            password=MYSQL_CRYPTO_PASSWORD,
-            host=MYSQL_CRYPTO_SERVER,
-            database=MYSQL_CRYPTO_DB,
-            connection_timeout=30,
-        )
-
-        self.cursor = self.cnx.cursor(buffered=True)
-
-        return self.cursor
-
-    @TRACER.start_as_current_span(name="get_msg")
+    @TRACER.start_as_current_span(name=SVC + ".wrt.get_msg")
     def get_msg(self, table, msg):
         # print("msg on get_msg", msg)
         try:
@@ -84,7 +62,7 @@ class PETROSAWriter(object):
 
                 if "T" in msg:
                     candle["close_time"] = datetime.fromtimestamp(msg["T"] / 1000.0)
-                candle["insert_time"] = datetime.utcnow()
+                candle["insert_time"] = datetime.now(datetime.UTC)
                 if "n" in msg:
                     candle["qty"] = float(msg["n"])
                 if "q" in msg:
@@ -122,7 +100,7 @@ class PETROSAWriter(object):
     def send_queue_size(self, options: CallbackOptions) -> Iterable[Observation]:
         yield Observation(self.queue.qsize())
 
-    @TRACER.start_as_current_span(name="update_forever")
+    @TRACER.start_as_current_span(name=SVC + ".wrt.update_forever")
     def update_forever(self):
         logging.info("Starting update_forever")
 
@@ -181,8 +159,7 @@ class PETROSAWriter(object):
                 logging.info(msg_table)
                 self.queue.put(msg_table)
 
-
-    @TRACER.start_as_current_span(name="prepare_record")
+    @TRACER.start_as_current_span(name=SVC + ".wrt.prepare_record")
     def prepare_record(self, record):
         record_prep = {}
         # record_prep["table"] = record["table"]
@@ -201,50 +178,16 @@ class PETROSAWriter(object):
         else:
             record_prep["origin"] = "noorigin"
         record_prep["timestamp"] = int(time.time() * 1000)
-        record_prep["insert_time"] = datetime.utcnow()
+        record_prep["insert_time"] = datetime.now(datetime.UTC)
 
         return record_prep
 
-    @TRACER.start_as_current_span(name="build_insert_sql")
-    def build_insert_sql(self, record_list, table):
-        sql = f"""INSERT IGNORE INTO {table} (`datetime`,
-        `ticker`, `open`, `high`, `low`, `close`, `qty`,
-        `vol`, `close_time`, `closed_candle`, `origin`, `timestamp`,
-        `insert_time`)
-        VALUES """
-
-        for record in record_list:
-            sql += f"""("{record['datetime']}",
-            "{record['ticker']}",
-            {record['open']},
-            {record['high']},
-            {record['low']},
-            {record['close']},
-            {record['qty']},
-            {record['vol']},
-            "{record['close_time']}",
-            {record['closed_candle']},
-            "{record['origin']}",
-            {record['timestamp']},
-            "{record['insert_time']}"), """
-
-        sql = sql[:-2] + ";"  # remove last comma and space
-
-        return sql
-
-    @TRACER.start_as_current_span(name="update_sql")
+    @TRACER.start_as_current_span(name=SVC + ".wrt.update_sql")
     @retry.retry(tries=5, backoff=2, logger=logging.getLogger(__name__))
-    def update_sql(self, candle_list, table):
+    def update_sql(self, candle_list, table, ):
         logging.info(f"Inserting {len(candle_list)} records on {table}")
         start_time = time.time_ns() // 1_000_000
 
-        self.connect_mysql()
-        sql = self.build_insert_sql(candle_list, table)
-
-        self.cursor.execute(sql)
-
-        self.cnx.commit()
-        self.cursor.close()
-        self.cnx.close()
+        sql.update_sql(record_list=candle_list, table=table, mode="INSERT IGNORE")
 
         self.sql_update_obs = (time.time_ns() // 1_000_000) - start_time

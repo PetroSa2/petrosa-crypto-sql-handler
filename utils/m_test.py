@@ -20,7 +20,7 @@ candle['close_time'] = datetime.datetime.now()
 candle['closed_candle'] = True
 candle['origin'] = "fromtest"
 candle['timestamp'] = int(time.time() * 1000)
-candle['insert_time'] = datetime.datetime.utcnow()
+candle['insert_time'] = datetime.datetime.now(datetime.timezone.utc)
 
 mycursor = cnx.cursor()
 

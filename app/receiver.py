@@ -3,14 +3,13 @@ import logging
 import os
 import time
 
-from opentelemetry import metrics
 from petrosa.messaging import kafkareceiver
 
 from app import writer
-from app.variables import OTEL_SERVICE_NAME, METER
-
+from app.variables import SVC, METER, TRACER
 
 class PETROSAReceiver(object):
+    @TRACER.start_as_current_span(name=SVC + ".rcvr.init_receiver")
     def __init__(self,
                  topic
                  ) -> None:
@@ -22,30 +21,31 @@ class PETROSAReceiver(object):
             print('Error in Kafka Consumer')
             raise
 
+    @TRACER.start_as_current_span(name=SVC + ".rcvr.run")
     def run(self):
         work_counter_general = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr."+self.topic, unit="1", description="Msgs Received on topic " + self.topic
+            SVC + ".rcvr."+self.topic, unit="1", description="Msgs Received on topic " + self.topic
         )
         work_counter_m1 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.m1."+self.topic, unit="1", description="M1 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.m1."+self.topic, unit="1", description="M1 Msgs Received on topic " + self.topic
         )
         work_counter_m5 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.m5."+self.topic, unit="1", description="M5 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.m5."+self.topic, unit="1", description="M5 Msgs Received on topic " + self.topic
         )
         work_counter_m15 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.m15."+self.topic, unit="1", description="M15 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.m15."+self.topic, unit="1", description="M15 Msgs Received on topic " + self.topic
         )
         work_counter_m30 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.m30."+self.topic, unit="1", description="m30 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.m30."+self.topic, unit="1", description="m30 Msgs Received on topic " + self.topic
         )
         work_counter_h1 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.h1."+self.topic, unit="1", description="H1 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.h1."+self.topic, unit="1", description="H1 Msgs Received on topic " + self.topic
         )
         work_counter_d1 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.d1."+self.topic, unit="1", description="D1 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.d1."+self.topic, unit="1", description="D1 Msgs Received on topic " + self.topic
         )
         work_counter_w1 = METER.create_counter(
-            OTEL_SERVICE_NAME + ".rcvr.w1."+self.topic, unit="1", description="W1 Msgs Received on topic " + self.topic
+            SVC + ".rcvr.w1."+self.topic, unit="1", description="W1 Msgs Received on topic " + self.topic
         )
         try:
             for msg in self.consumer:
@@ -83,6 +83,5 @@ class PETROSAReceiver(object):
             logging.error(e)
             logging.error('Error in Kafka Consumer')
             os._exit(1)
-        
 
         return True

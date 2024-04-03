@@ -8,7 +8,6 @@ from opentelemetry.metrics import CallbackOptions, Observation
 from app import receiver
 from app.variables import OTEL_SERVICE_NAME, METER
 
-
 def send_number_of_threads(options: CallbackOptions) -> Iterable[Observation]:
     yield Observation(threading.active_count())
 
