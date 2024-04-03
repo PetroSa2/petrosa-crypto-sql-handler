@@ -3,7 +3,7 @@ import queue
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Iterable
 import retry
 from petrosa.database import sql
@@ -62,7 +62,7 @@ class PETROSAWriter(object):
 
                 if "T" in msg:
                     candle["close_time"] = datetime.fromtimestamp(msg["T"] / 1000.0)
-                candle["insert_time"] = datetime.now(datetime.UTC)
+                candle["insert_time"] = datetime.now(timezone.UTC)
                 if "n" in msg:
                     candle["qty"] = float(msg["n"])
                 if "q" in msg:
@@ -178,7 +178,7 @@ class PETROSAWriter(object):
         else:
             record_prep["origin"] = "noorigin"
         record_prep["timestamp"] = int(time.time() * 1000)
-        record_prep["insert_time"] = datetime.now(datetime.UTC)
+        record_prep["insert_time"] = datetime.now(timezone.UTC)
 
         return record_prep
 
