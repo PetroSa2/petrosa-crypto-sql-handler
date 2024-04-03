@@ -158,6 +158,8 @@ class PETROSAWriter(object):
                 logging.error("Error on update_forever", e)
                 logging.info(msg_table)
                 self.queue.put(msg_table)
+                
+            time.sleep(0.01)
 
     @TRACER.start_as_current_span(name=SVC + ".wrt.prepare_record")
     def prepare_record(self, record):

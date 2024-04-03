@@ -1,5 +1,5 @@
 import logging
-import os
+import time
 import threading
 from typing import Iterable
 
@@ -68,3 +68,4 @@ while True:
             name="th_receiver_socket_binancebackfill",
         )
         th_receiver_socket_binancebackfill.start()
+        time.sleep(1)
