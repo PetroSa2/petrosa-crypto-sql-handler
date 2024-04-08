@@ -26,7 +26,7 @@ pandas==2.1.3
 petrosa
 protobuf==4.21.12
 py==1.11.0
-pymongo==4.6.0
+pymongo==4.6.3
 python-dateutil==2.8.2
 pytz==2023.3.post1
 requests==2.31.0
