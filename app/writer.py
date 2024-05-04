@@ -48,7 +48,16 @@ class PETROSAWriter(object):
 
     @TRACER.start_as_current_span(name=SVC + ".wrt.get_msg")
     def get_msg(self, table, msg):
-        # print("msg on get_msg", msg)
+        """
+        Process a message and add it to the queue.
+
+        Args:
+            table (str): The name of the table to insert the message into.
+            msg (dict): The message to process.
+
+        Returns:
+            bool: True if the message was successfully processed and added to the queue, False otherwise.
+        """
         try:
             if msg["x"] is True:
                 candle = {}
@@ -95,13 +104,34 @@ class PETROSAWriter(object):
         return True
 
     def send_sql_update_obs(self, options: CallbackOptions) -> Iterable[Observation]:
-        yield Observation(self.sql_update_obs)
+            """
+            Sends a SQL update observation.
+
+            Args:
+                options (CallbackOptions): The options for the callback.
+
+            Yields:
+                Observation: The SQL update observation.
+            """
+            yield Observation(self.sql_update_obs)
 
     def send_queue_size(self, options: CallbackOptions) -> Iterable[Observation]:
         yield Observation(self.queue.qsize())
 
     @TRACER.start_as_current_span(name=SVC + ".wrt.update_forever")
     def update_forever(self):
+        """
+        Continuously updates the SQL database with incoming messages from the queue.
+
+        This method runs in an infinite loop and processes messages from the queue.
+        It checks the table name of each message and appends the message to the corresponding list.
+        When a list reaches a certain size or a certain time has elapsed, it updates the SQL database
+        with the contents of the list and clears the list.
+
+        If an error occurs during the update process, the message is put back into the queue for retry.
+
+        Note: This method sleeps for 0.01 seconds after each iteration to avoid excessive CPU usage.
+        """
         logging.info("Starting update_forever")
 
         last_m5 = time.time()
@@ -111,7 +141,6 @@ class PETROSAWriter(object):
 
         while True:
             msg_table = self.queue.get()
-            # print("message on writer", msg_table)
 
             if msg_table["table"] == "candles_m5":
                 self.candles_m5_list.append(self.prepare_record(msg_table))
@@ -163,6 +192,16 @@ class PETROSAWriter(object):
 
     @TRACER.start_as_current_span(name=SVC + ".wrt.prepare_record")
     def prepare_record(self, record):
+        """
+        Prepares a record for insertion into the database.
+
+        Args:
+            record (dict): The record to be prepared.
+
+        Returns:
+            dict: The prepared record.
+
+        """
         record_prep = {}
         # record_prep["table"] = record["table"]
         record_prep["datetime"] = record["data"]["datetime"]
@@ -186,10 +225,20 @@ class PETROSAWriter(object):
 
     @TRACER.start_as_current_span(name=SVC + ".wrt.update_sql")
     @retry.retry(tries=5, backoff=2, logger=logging.getLogger(__name__))
-    def update_sql(self, candle_list, table, ):
-        logging.debug(f"DB Inserting {len(candle_list)} records on {table}")
-        start_time = time.time_ns() // 1_000_000
+    def update_sql(self, candle_list, table):
+            """
+            Updates the specified SQL table with the given candle list.
 
-        sql.update_sql(record_list=candle_list, table=table, mode="INSERT IGNORE")
+            Args:
+                candle_list (list): A list of candle records to be inserted into the table.
+                table (str): The name of the SQL table to update.
 
-        self.sql_update_obs = (time.time_ns() // 1_000_000) - start_time
+            Returns:
+                None
+            """
+            logging.debug(f"DB Inserting {len(candle_list)} records on {table}")
+            start_time = time.time_ns() // 1_000_000
+
+            sql.update_sql(record_list=candle_list, table=table, mode="INSERT IGNORE")
+
+            self.sql_update_obs = (time.time_ns() // 1_000_000) - start_time
