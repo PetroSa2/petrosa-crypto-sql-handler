@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: petrosa-crypto-sql-handler
-        image: yurisa2/petrosa-crypto-sql-handler:v0.0.48
+        image: yurisa2/petrosa-crypto-sql-handler:v0.0.49
         imagePullPolicy: Always
         envFrom:
         - configMapRef:
@@ -26,5 +26,5 @@ spec:
           - name: OTEL_SERVICE_NAME
             value: "petrosa-crypto-sql-handler"
           - name: VERSION
-            value: "0.0.48"
+            value: "0.0.49"
       restartPolicy: Always
