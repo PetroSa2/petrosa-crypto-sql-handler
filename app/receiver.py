@@ -23,6 +23,12 @@ class PETROSAReceiver(object):
 
     @TRACER.start_as_current_span(name=SVC + ".rcvr.run")
     def run(self):
+        """
+        Runs the receiver process to consume messages from a Kafka topic and process them.
+
+        Returns:
+            bool: True if the process completes successfully, False otherwise.
+        """
         work_counter_general = METER.create_counter(
             SVC + ".rcvr."+self.topic, unit="1", description="Msgs Received on topic " + self.topic
         )
