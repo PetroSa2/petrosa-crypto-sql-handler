@@ -14,8 +14,8 @@ OTEL_SERVICE_NAME = os.getenv("OTEL_SERVICE_NAME", "default-service-name")
 SVC = OTEL_SERVICE_NAME
 
 MAX_WORKERS = int(os.getenv("MAX_WORKERS", "1"))
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", "100"))
-BATCH_TIME = int(os.getenv("BATCH_TIME", "5"))
+SQL_HANDLER_BATCH_SIZE = int(os.getenv("SQL_HANDLER_BATCH_SIZE", "500"))
+SQL_HANDLER_BATCH_TIME = int(os.getenv("SQL_HANDLER_BATCH_TIME", "120"))
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 

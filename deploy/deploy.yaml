@@ -15,18 +15,9 @@ spec:
       labels:
         app: petrosa-crypto-sql-handler
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: petrosa.class
-                operator: In
-                values:
-                - worker
       containers:
       - name: petrosa-crypto-sql-handler
-        image: yurisa2/petrosa-crypto-sql-handler:v0.0.43
+        image: yurisa2/petrosa-crypto-sql-handler:v0.0.44
         imagePullPolicy: Always
         envFrom:
         - configMapRef:
@@ -35,5 +26,5 @@ spec:
           - name: OTEL_SERVICE_NAME
             value: "petrosa-crypto-sql-handler"
           - name: VERSION
-            value: "0.0.43"
+            value: "0.0.44"
       restartPolicy: Always

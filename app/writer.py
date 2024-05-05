@@ -14,8 +14,8 @@ from app.variables import (
     SVC,
     METER,
     MAX_WORKERS,
-    BATCH_SIZE,
-    BATCH_TIME
+    SQL_HANDLER_BATCH_SIZE,
+    SQL_HANDLER_BATCH_TIME
 )
 
 
@@ -156,29 +156,29 @@ class PETROSAWriter(object):
 
             try:
                 if (
-                    len(self.candles_m5_list) >= BATCH_SIZE
-                    or ((time.time() - last_m5) >= BATCH_TIME and len(self.candles_m5_list) > 0)
+                    len(self.candles_m5_list) >= SQL_HANDLER_BATCH_SIZE
+                    or ((time.time() - last_m5) >= SQL_HANDLER_BATCH_TIME and len(self.candles_m5_list) > 0)
                 ):
                     self.update_sql(self.candles_m5_list, "candles_m5")
                     self.candles_m5_list.clear()
                     last_m5 = time.time()
                 elif (
-                    len(self.candles_m15_list) >= BATCH_SIZE
-                    or( (time.time() - last_m15) >= BATCH_TIME and len(self.candles_m15_list) > 0)
+                    len(self.candles_m15_list) >= SQL_HANDLER_BATCH_SIZE
+                    or( (time.time() - last_m15) >= SQL_HANDLER_BATCH_TIME and len(self.candles_m15_list) > 0)
                 ):
                     self.update_sql(self.candles_m15_list, "candles_m15")
                     self.candles_m15_list.clear()
                     last_m15 = time.time()
                 elif (
-                    len(self.candles_m30_list) >= BATCH_SIZE
-                    or ((time.time() - last_m30) >= BATCH_TIME and len(self.candles_m30_list) > 0)
+                    len(self.candles_m30_list) >= SQL_HANDLER_BATCH_SIZE
+                    or ((time.time() - last_m30) >= SQL_HANDLER_BATCH_TIME and len(self.candles_m30_list) > 0)
                 ):
                     self.update_sql(self.candles_m30_list, "candles_m30")
                     self.candles_m30_list.clear()
                     last_m30 = time.time()
                 elif (
-                    len(self.candles_h1_list) >= BATCH_SIZE
-                    or ((time.time() - last_h1) >= BATCH_TIME and len(self.candles_h1_list) > 0)
+                    len(self.candles_h1_list) >= SQL_HANDLER_BATCH_SIZE
+                    or ((time.time() - last_h1) >= SQL_HANDLER_BATCH_TIME and len(self.candles_h1_list) > 0)
                 ):
                     self.update_sql(self.candles_h1_list, "candles_h1")
                     self.candles_h1_list.clear()
